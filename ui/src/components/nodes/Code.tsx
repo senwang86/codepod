@@ -300,10 +300,15 @@ export const ResultBlock = memo<any>(function ResultBlock({ id, layout }) {
                         key={combinedKey}
                       >
                         {res.text}
-                        <img
-                          src={`data:image/png;base64,${res.image}`}
-                          alt="output"
-                        />
+                        {res.html && (
+                          <div dangerouslySetInnerHTML={{ __html: res.html }} />
+                        )}
+                        {res.image && (
+                          <img
+                            src={`data:image/png;base64,${res.image}`}
+                            alt="output"
+                          />
+                        )}
                       </Box>
                     );
                   case "execute_result":
@@ -320,6 +325,9 @@ export const ResultBlock = memo<any>(function ResultBlock({ id, layout }) {
                         }}
                       >
                         {res.text}
+                        {res.html && (
+                          <div dangerouslySetInnerHTML={{ __html: res.html }} />
+                        )}
                       </Box>
                     );
                   default:
