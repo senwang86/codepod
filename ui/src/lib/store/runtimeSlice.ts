@@ -158,7 +158,7 @@ export type RuntimeInfo = {
   wsStatus?: string;
 };
 
-type PodResult = {
+export type PodResult = {
   exec_count?: number;
   last_exec_end?: boolean;
   data: {

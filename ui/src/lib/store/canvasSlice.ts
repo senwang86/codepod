@@ -52,6 +52,7 @@ import { node } from "prop-types";
 import { quadtree } from "d3-quadtree";
 import { getHelperLines, level2fontsize } from "../../components/nodes/utils";
 import { json2yxml, yxml2json } from "../utils/y-utils";
+import { PodResult } from "./runtimeSlice";
 
 // TODO add node's data typing.
 export type NodeData = {
@@ -457,6 +458,8 @@ export const createCanvasSlice: StateCreator<MyState, [], [], CanvasSlice> = (
   importLocalCode: (position, importScopeName, cellList) => {
     console.log("Sync imported Jupyter notebook or Python scripts");
     let nodesMap = get().getNodesMap();
+    let codeMap = get().getCodeMap();
+    let resultMap = get().getResultMap();
     let scopeNode = createNewNode("SCOPE", position);
     // parent could be "ROOT" or a SCOPE node
     let parent = getScopeAt(
@@ -500,7 +503,7 @@ export const createCanvasSlice: StateCreator<MyState, [], [], CanvasSlice> = (
         let podRichContent = cell.cellType == "markdown" ? cell.cellSource : "";
         let execution_count = cell.execution_count || null;
         let podResults: {
-          type?: string;
+          type: string;
           html?: string;
           text?: string;
           image?: string;
@@ -518,6 +521,7 @@ export const createCanvasSlice: StateCreator<MyState, [], [], CanvasSlice> = (
             case "execute_result":
               podResults.push({
                 type: cellOutput["output_type"],
+                html: cellOutput["data"]["text/html"].join(""),
                 text: cellOutput["data"]["text/plain"].join(""),
               });
               break;
@@ -525,6 +529,7 @@ export const createCanvasSlice: StateCreator<MyState, [], [], CanvasSlice> = (
               podResults.push({
                 type: cellOutput["output_type"],
                 text: cellOutput["data"]["text/plain"].join(""),
+                html: cellOutput["data"]["text/html"].join(""),
                 image: cellOutput["data"]["image/png"],
               });
               break;
@@ -565,6 +570,12 @@ export const createCanvasSlice: StateCreator<MyState, [], [], CanvasSlice> = (
 
         // update peer
         nodesMap.set(node.id, node);
+        codeMap.set(node.id, new Y.Text(podContent));
+        resultMap.set(node.id, {
+          data: podResults,
+          exec_count: execution_count,
+          error: podError,
+        });
       }
     }
     get().adjustLevel();
