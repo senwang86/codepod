@@ -25,6 +25,8 @@ export interface SettingSlice {
   setAutoCompletion: (b: boolean) => void;
   isCustomToken?: boolean;
   setIsCustomToken: (b: boolean) => void;
+  isSidebarOnLeftHand: boolean;
+  setIsSidebarOnLeftHand: (b: boolean) => void;
 }
 
 export const createSettingSlice: StateCreator<MyState, [], [], SettingSlice> = (
@@ -164,5 +166,12 @@ export const createSettingSlice: StateCreator<MyState, [], [], SettingSlice> = (
     set({ isCustomToken: b });
     // also write to local storage
     localStorage.setItem("isCustomToken", JSON.stringify(b));
+  },
+  isSidebarOnLeftHand: localStorage.getItem("isSidebarOnLeftHand")
+    ? JSON.parse(localStorage.getItem("isSidebarOnLeftHand")!)
+    : true,
+  setIsSidebarOnLeftHand: (b: boolean) => {
+    set({ isSidebarOnLeftHand: b });
+    localStorage.setItem("isSidebarOnLeftHand", JSON.stringify(b));
   },
 });
