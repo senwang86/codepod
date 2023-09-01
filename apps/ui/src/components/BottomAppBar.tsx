@@ -46,7 +46,7 @@ const RuntimeItem = ({ runtimeId }) => {
   useEffect(() => {}, [runtimeChanged]);
   const activeRuntime = useStore(store, (state) => state.activeRuntime);
   const setActiveRuntime = useStore(store, (state) => state.setActiveRuntime);
-  const runtime = runtimeMap.get(runtimeId) || { wsStatus: "unknown" };
+  const runtime = runtimeMap.get(runtimeId);
   const repoId = useStore(store, (state) => state.repoId);
 
   const [requestKernelStatus] = useMutation(
@@ -84,13 +84,13 @@ const RuntimeItem = ({ runtimeId }) => {
   );
 
   const runtimeStatusColors = { idle: "green", busy: "yellow", default: "red" };
-  const runtimeStatus = runtime.status ?? "default";
+  const runtimeStatus = runtime!.status || "default";
   const wsStatusConfig = {
     connected: { title: "connected", color: "green" },
     connecting: { title: "connecting", color: "yellow" },
     default: { title: "disconnected", color: "red" },
   };
-  const wsStatus = wsStatusConfig[runtime.wsStatus || "default"];
+  const wsStatus = wsStatusConfig[runtime!.wsStatus || "default"];
 
   return (
     <ListItem key={runtimeId} disablePadding sx={{ margin: 0 }}>
@@ -390,43 +390,43 @@ function YjsSyncStatus() {
   };
   const status = statusConfig[yjsStatus || ""] || statusConfig.default;
   return (
-    <Stack direction="row" spacing={1}>
-      <Stack direction="row" spacing={0.5} alignItems="center">
-        <Paper elevation={0}>Sync Server:</Paper>
-        <Tooltip title={status.title}>
-          <CircleIcon style={{ color: status.color }} />
-        </Tooltip>
+    <Box>
+      <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Paper elevation={0}>Sync Server:</Paper>
+          <Tooltip title={status.title}>
+            <CircleIcon style={{ color: status.color }} />
+          </Tooltip>
+        </Stack>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Paper elevation={0}>Sync Status:</Paper>
+          {match(yjsSyncStatus)
+            .with("uploading", () => (
+              <Tooltip title="uploading">
+                <CloudUploadIcon />
+              </Tooltip>
+            ))
+            .with("synced", () => (
+              <Tooltip title="synced">
+                <CloudDoneIcon />
+              </Tooltip>
+            ))
+            .otherwise(() => (
+              <Tooltip title="disconnected">
+                <CloudOffIcon />
+              </Tooltip>
+            ))}
+        </Stack>
       </Stack>
-      <Stack direction="row" spacing={0.5} alignItems="center">
-        <Paper elevation={0}>Sync Status:</Paper>
-        {match(yjsSyncStatus)
-          .with("uploading", () => (
-            <Tooltip title="uploading">
-              <CloudUploadIcon />
-            </Tooltip>
-          ))
-          .with("synced", () => (
-            <Tooltip title="synced">
-              <CloudDoneIcon />
-            </Tooltip>
-          ))
-          .otherwise(() => (
-            <Tooltip title="disconnected">
-              <CloudOffIcon />
-            </Tooltip>
-          ))}
-      </Stack>
-    </Stack>
+    </Box>
   );
 }
 
 type BottomAppBarProps = {
-  open: boolean;
   drawerWidth: number;
 };
 
 export const BottomAppBar: React.FC<BottomAppBarProps> = ({
-  open = false,
   drawerWidth = 0,
 }) => {
   // never render saving status / runtime module for a guest
@@ -434,24 +434,36 @@ export const BottomAppBar: React.FC<BottomAppBarProps> = ({
   const store = useContext(RepoContext);
   if (!store) throw new Error("Missing BearContext.Provider in the tree");
   const isGuest = useStore(store, (state) => state.role === "GUEST");
+  const sidebarOpen = useStore(store, (state) => state.sidebarOpen);
+  const isSidebarOnLeftHand = useStore(
+    store,
+    (state) => state.isSidebarOnLeftHand
+  );
   return !isGuest ? (
     <AppBar
       position="fixed"
       color="inherit"
       sx={{
-        width: `calc(100% - ${open ? drawerWidth : 0}px)`,
-        transition: "width 195ms cubic-bezier(0.4, 0, 0.6, 1) 0ms",
+        width: `calc(100% - ${sidebarOpen ? drawerWidth : 0}px)`,
+        /*transition: "width 195ms cubic-bezier(0.4, 0, 0.6, 1) 0ms",*/
         top: "auto",
         bottom: 0,
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
         maxHeight: "35px",
+        margin: sidebarOpen
+          ? isSidebarOnLeftHand
+            ? `0px 0px 0px ${drawerWidth}px`
+            : `0px ${drawerWidth}px 0px 0px`
+          : 0,
       }}
     >
       <Stack
         direction="row"
-        spacing={2}
+        spacing={10}
+        alignItems="center"
+        justifyContent="space-between"
         sx={{
           paddingLeft: "16px",
         }}
