@@ -22,7 +22,6 @@ import { Canvas } from "../components/Canvas";
 import { Header } from "../components/Header";
 import { Sidebar } from "../components/Sidebar";
 import { BottomAppBar } from "../components/BottomAppBar";
-import { useLocalStorage } from "../hooks/useLocalStorage";
 import { Stack, TextField, Tooltip } from "@mui/material";
 import { useAuth } from "../lib/auth";
 import { initParser } from "../lib/parser";
@@ -138,14 +137,14 @@ const HeaderItem = memo<any>(({ id }) => {
 });
 
 function RepoWrapper({ children, id }) {
-  // this component is used to provide a foldable layout
-  const [open, setOpen] = useLocalStorage("sidebar", true);
-
   const store = useContext(RepoContext);
   if (!store) throw new Error("Missing BearContext.Provider in the tree");
-
+  const isSidebarOnLeftHand = useStore(
+    store,
+    (state) => state.isSidebarOnLeftHand
+  );
   const setShareOpen = useStore(store, (state) => state.setShareOpen);
-  const navigate = useNavigate();
+  const sidebarOpen = useStore(store, (state) => state.sidebarOpen);
   const [copyRepo] = useMutation(
     gql`
       mutation CopyRepo($id: String!) {
@@ -154,9 +153,6 @@ function RepoWrapper({ children, id }) {
     `,
     { variables: { id } }
   );
-  // if(result.data.copyRepo){
-  //   navigate(`/repo/${result.data.copyRepo}`);
-  // }
 
   const DrawerWidth = 240;
   return (
@@ -167,12 +163,7 @@ function RepoWrapper({ children, id }) {
         overflow: "hidden",
       }}
     >
-      <Sidebar
-        width={DrawerWidth}
-        open={open}
-        onOpen={() => setOpen(true)}
-        onClose={() => setOpen(false)}
-      />
+      <Sidebar width={DrawerWidth} />
 
       <Box
         sx={{
@@ -181,11 +172,15 @@ function RepoWrapper({ children, id }) {
           verticalAlign: "top",
           height: "100%",
           transition: "margin 195ms cubic-bezier(0.4, 0, 0.6, 1) 0ms",
-          ml: open ? `${DrawerWidth}px` : 0,
+          margin: sidebarOpen
+            ? isSidebarOnLeftHand
+              ? `0px 0px 0px ${DrawerWidth}px`
+              : `0px ${DrawerWidth}px 0px 0px`
+            : 0,
         }}
       >
         <Header
-          open={open}
+          open={sidebarOpen}
           drawerWidth={DrawerWidth}
           breadcrumbItem={<HeaderItem id={id} />}
           shareButton={
@@ -223,9 +218,11 @@ function RepoWrapper({ children, id }) {
         >
           {children}
         </Box>
+        {/*
         <Box>
-          <BottomAppBar open={open} drawerWidth={DrawerWidth} />
+          <BottomAppBar drawerWidth={DrawerWidth} />
         </Box>
+        */}
       </Box>
     </Box>
   );

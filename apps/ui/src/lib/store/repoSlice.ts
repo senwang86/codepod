@@ -32,6 +32,8 @@ export interface RepoSlice {
   settingOpen: boolean;
   setShareOpen: (open: boolean) => void;
   setSettingOpen: (open: boolean) => void;
+  sidebarOpen: boolean;
+  setSidebarOpen: (open: boolean) => void;
   loadError: any;
   role: "OWNER" | "COLLABORATOR" | "GUEST";
   isPublic: boolean;
@@ -53,6 +55,8 @@ export const createRepoSlice: StateCreator<MyState, [], [], RepoSlice> = (
   settingOpen: false,
   setShareOpen: (open: boolean) => set({ shareOpen: open }),
   setSettingOpen: (open: boolean) => set({ settingOpen: open }),
+  sidebarOpen: true,
+  setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
 
   setRepo: (repoId: string) =>
     set(

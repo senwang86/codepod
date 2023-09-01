@@ -112,6 +112,14 @@ function SidebarSettings() {
   );
   const setSettingOpen = useStore(store, (state) => state.setSettingOpen);
 
+  const isSidebarOnLeftHand = useStore(
+    store,
+    (state) => state.isSidebarOnLeftHand
+  );
+  const setIsSidebarOnLeftHand = useStore(
+    store,
+    (state) => state.setIsSidebarOnLeftHand
+  );
   const contextualZoomParams = useStore(
     store,
     (state) => state.contextualZoomParams
@@ -168,6 +176,28 @@ function SidebarSettings() {
                   />
                 }
                 label="Show Line Numbers"
+              />
+            </Tooltip>
+            <Tooltip
+              title={
+                "Display the Sidebar on the left side; switching off will move the Sidebar to the right side."
+              }
+              disableInteractive
+            >
+              <FormControlLabel
+                control={
+                  <Switch
+                    // temporary disable the switch
+                    disabled
+                    checked={isSidebarOnLeftHand}
+                    size="small"
+                    color="warning"
+                    onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                      setIsSidebarOnLeftHand(event.target.checked);
+                    }}
+                  />
+                }
+                label="Sidebar on the left side"
               />
             </Tooltip>
             <Tooltip
@@ -913,13 +943,6 @@ function ToastError() {
   return <Box></Box>;
 }
 
-type SidebarProps = {
-  width: number;
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-};
-
 function ExportPanel() {
   const { id: repoId } = useParams();
   const store = useContext(RepoContext);
@@ -1337,38 +1360,61 @@ function TableofPods() {
   );
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({
-  width,
-  open,
-  onOpen,
-  onClose,
-}) => {
+type SidebarProps = {
+  width: number;
+};
+
+export const Sidebar: React.FC<SidebarProps> = ({ width }) => {
   // never render saving status / runtime module for a guest
   // FIXME: improve the implementation logic
   const store = useContext(RepoContext);
   if (!store) throw new Error("Missing BearContext.Provider in the tree");
   const isGuest = useStore(store, (state) => state.role === "GUEST");
+  const sidebarOpen = useStore(store, (state) => state.sidebarOpen);
+  const setSidebarOpen = useStore(store, (state) => state.setSidebarOpen);
+  const isSidebarOnLeftHand = useStore(
+    store,
+    (state) => state.isSidebarOnLeftHand
+  );
   const settingOpen = useStore(store, (state) => state.settingOpen);
   return (
     <>
       <MyKBar />
-      <Box
-        sx={{
-          position: "absolute",
-          display: open ? "none" : "block",
-          top: `54px`,
-          left: 1,
-        }}
-      >
-        <IconButton
-          onClick={onOpen}
+      {isSidebarOnLeftHand ? (
+        <Box
           sx={{
-            zIndex: 1,
+            position: "absolute",
+            display: "block",
+            top: `50%`,
+            left: sidebarOpen ? width : 1,
           }}
         >
-          <ChevronRightIcon />
-        </IconButton>
-      </Box>
+          <IconButton
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+            }}
+          >
+            {sidebarOpen ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          </IconButton>
+        </Box>
+      ) : (
+        <Box
+          sx={{
+            position: "absolute",
+            display: "block",
+            top: `50%`,
+            right: sidebarOpen ? width : 1,
+          }}
+        >
+          <IconButton
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+            }}
+          >
+            {sidebarOpen ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        </Box>
+      )}
 
       <Drawer
         sx={{
@@ -1380,27 +1426,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           },
         }}
         variant="persistent"
-        anchor="left"
-        open={open}
+        anchor={isSidebarOnLeftHand ? "left" : "right"}
+        open={sidebarOpen}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            paddingLeft: "8px",
-            height: 48,
-          }}
-        >
-          <IconButton onClick={onClose}>
-            <ChevronLeftIcon />
-          </IconButton>
-        </Box>
-        <Divider />
-        <Box
-          sx={{
-            padding: "8px 16px",
-          }}
-        >
+        <Box sx={{ ml: "5px", pl: "8px", pt: "50px" }}>
           <Stack>
             {!isGuest && (
               <Box>
